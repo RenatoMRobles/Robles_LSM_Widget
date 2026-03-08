@@ -1,112 +1,133 @@
 import fitz  # PyMuPDF
 import os
-import re    # Nuestro nuevo filtro de pureza textual
+import re
 
 # ==========================================
-# 🌸 MOTOR RATATOUILLE: LENTE DE CORRELACIÓN v3.0 🌸
+# 🌸 MOTOR RATATOUILLE: LENTE HOLÍSTICO v4.0 🌸
 # ==========================================
 
-class LenteCorrelacion:
+class LenteHolistico:
     def __init__(self, directorio_salida="img"):
         self.directorio_salida = directorio_salida
         if not os.path.exists(self.directorio_salida):
             os.makedirs(self.directorio_salida)
-            print(f"✨ [Vera] Entorno '{self.directorio_salida}' revitalizado para la luz.")
+            print(f"✨ [Vera] Ecosistema visual '{self.directorio_salida}' renovado.")
 
-    def escanear_con_precision(self, ruta_pdf):
-        print(f"📖 [Elena] Activando el Lente Sintrópico de Cristal en: {ruta_pdf}...")
+    def purificar_texto(self, texto):
+        """Filtra la entropía y devuelve solo luz alfabética."""
+        texto_puro = re.sub(r'[^a-zA-ZñÑáéíóúÁÉÍÓÚ]', '', texto)
+        if texto.isupper() and len(texto_puro) >= 2:
+            return texto_puro.lower()
+        return None
+
+    def escanear_al_maximo(self, ruta_pdf):
+        print(f"📖 [Elena] Activando el Lente Holístico de Conexión en: {ruta_pdf}...")
         
         try:
             doc = fitz.open(ruta_pdf)
+            matriz_hd = fitz.Matrix(2.0, 2.0) # Zoom de bienestar
             contador_exitos = 0
-            contador_huerfanas = 0
             
+            # Pre-leemos todas las palabras del documento para crear puentes
+            palabras_por_pagina = {}
+            for i in range(len(doc)):
+                palabras_por_pagina[i] = doc[i].get_text("words")
+
             for num_pag in range(len(doc)):
-                pagina = doc.load_page(num_pag)
+                pagina = doc[num_pag]
                 info_imagenes = pagina.get_image_info(xrefs=True)
                 
-                # EVOLUCIÓN: Extraemos palabras individuales con su geometría exacta, no bloques
-                palabras = pagina.get_text("words") 
+                # --- SOLUCIÓN 2 & 3: AGRUPACIÓN Y FILTRO ---
+                cajas_validas = []
+                for img in info_imagenes:
+                    x0, y0, x1, y1 = img["bbox"]
+                    # 3. Descartamos logos/flechas (imágenes muy pequeñas)
+                    if (x1 - x0) < 35 or (y1 - y0) < 35:
+                        continue
+                    cajas_validas.append(fitz.Rect(x0, y0, x1, y1))
 
-                for img_info in info_imagenes:
-                    x0_img, y0_img, x1_img, y1_img = img_info["bbox"]
-                    xref_img = img_info["xref"]
+                # 2. Agrupamos imágenes que pertenecen a la misma palabra (señas múltiples)
+                cajas_fusionadas = []
+                for caja in cajas_validas:
+                    fusionada = False
+                    for i, caja_f in enumerate(cajas_fusionadas):
+                        # Creamos un aura alrededor de la caja para ver si toca a otra
+                        aura = fitz.Rect(caja.x0 - 40, caja.y0 - 20, caja.x1 + 40, caja.y1 + 20)
+                        if aura.intersects(caja_f):
+                            cajas_fusionadas[i] = caja_f | caja # Unimos los rectángulos
+                            fusionada = True
+                            break
+                    if not fusionada:
+                        cajas_fusionadas.append(caja)
+
+                # --- BÚSQUEDA DE PALABRAS ---
+                palabras_actuales = palabras_por_pagina[num_pag]
+                palabras_siguientes = palabras_por_pagina[num_pag + 1] if num_pag + 1 < len(doc) else []
+
+                for caja in cajas_fusionadas:
+                    nombre_palabra = None
+                    y_inferior = caja.y1
+
+                    # Buscamos en la página actual
+                    candidatas = []
+                    for w in palabras_actuales:
+                        wx0, wy0, wx1, wy1, texto_crudo, _, _, _ = w
+                        if y_inferior - 15 <= wy0 <= y_inferior + 100:
+                            centro_caja = (caja.x0 + caja.x1) / 2
+                            if caja.x0 - 50 <= (wx0 + wx1) / 2 <= caja.x1 + 50:
+                                candidatas.append(w)
                     
-                    # FILTRO DE LUZ: Ignoramos ruido visual minúsculo
-                    if (x1_img - x0_img) < 50 or (y1_img - y0_img) < 50:
-                        continue 
+                    candidatas.sort(key=lambda w: w[1]) # Ordenamos por cercanía vertical
+                    for w in candidatas:
+                        etiqueta = self.purificar_texto(w[4])
+                        if etiqueta:
+                            nombre_palabra = etiqueta
+                            break
 
-                    nombre_palabra = "desconocido"
-                    palabras_candidatas = []
+                    # --- SOLUCIÓN 1: PUENTE DE SALTO DE PÁGINA ---
+                    if not nombre_palabra and y_inferior > pagina.rect.height - 200:
+                        candidatas_sig = []
+                        for w in palabras_siguientes:
+                            wx0, wy0, wx1, wy1, texto_crudo, _, _, _ = w
+                            if wy0 < 150: # Buscamos solo en la parte más alta de la pag siguiente
+                                candidatas_sig.append(w)
+                        
+                        candidatas_sig.sort(key=lambda w: w[1])
+                        for w in candidatas_sig:
+                            etiqueta = self.purificar_texto(w[4])
+                            if etiqueta:
+                                nombre_palabra = etiqueta
+                                print(f"🌉 [Vera] Puente sintrópico activado para la palabra: '{nombre_palabra}'")
+                                break
 
-                    # RADAR DE PRECISIÓN GEOMÉTRICA
-                    for w in palabras:
-                        x0_w, y0_w, x1_w, y1_w, texto_w, block_no, line_no, word_no = w
+                    # --- CAPTURA PRECISA DE LA IMAGEN COMPUESTA ---
+                    if nombre_palabra:
+                        # Le damos un pequeño margen armónico para que no se vea cortada
+                        caja_captura = fitz.Rect(caja.x0 - 5, caja.y0 - 5, caja.x1 + 5, caja.y1 + 5)
+                        caja_captura = caja_captura.intersect(pagina.rect) # Evita salir de la página
                         
-                        # Debe estar ligeramente debajo de la imagen (margen sintrópico)
-                        if (y1_img - 20) <= y0_w <= (y1_img + 100):
-                            # El centro de la palabra debe alinearse con el ancho de la imagen
-                            centro_w = (x0_w + x1_w) / 2
-                            if (x0_img - 40) <= centro_w <= (x1_img + 40):
-                                palabras_candidatas.append(w)
-                    
-                    # Ordenamos las candidatas para evaluar primero la que está más cerca de la imagen
-                    palabras_candidatas.sort(key=lambda w: w[1]) 
-                    
-                    for w in palabras_candidatas:
-                        texto_crudo = w[4]
-                        
-                        # LIMPIEZA EXTREMA: Solo permitimos el alfabeto. Destruye cualquier entropía binaria.
-                        texto_puro = re.sub(r'[^a-zA-ZñÑáéíóúÁÉÍÓÚ]', '', texto_crudo)
-                        
-                        # Verificamos si la original parecía mayúscula y la pura tiene contenido
-                        if texto_crudo.isupper() and len(texto_puro) >= 2:
-                            nombre_palabra = texto_puro.lower()
-                            break # ¡Encontramos la etiqueta perfecta!
+                        try:
+                            # Tomamos una FOTO directa de la región, uniendo todas las sub-imágenes
+                            pix = pagina.get_pixmap(matrix=matriz_hd, clip=caja_captura)
+                            ruta = os.path.join(self.directorio_salida, f"{nombre_palabra}.png")
+                            pix.save(ruta)
+                            print(f"⚡ [Elena] ¡Captura perfecta! -> {nombre_palabra}.png")
+                            contador_exitos += 1
+                        except Exception:
+                            pass
 
-                    # ORQUESTACIÓN DE ARCHIVOS
-                    if nombre_palabra != "desconocido":
-                        nombre_archivo = f"{nombre_palabra}.png"
-                        es_huerfana = False
-                    else:
-                        nombre_archivo = f"img_huerfana_{xref_img}.png"
-                        es_huerfana = True
-                        contador_huerfanas += 1
-
-                    ruta_guardado = os.path.join(self.directorio_salida, nombre_archivo)
-                    
-                    try:
-                        # CREACIÓN DE PNG PURO (Evita errores de formato)
-                        pixmap = fitz.Pixmap(doc, xref_img)
-                        
-                        # Si tiene un espacio de color complejo (CMYK), lo armonizamos a RGB
-                        if pixmap.n - pixmap.alpha > 3:
-                            pixmap = fitz.Pixmap(fitz.csRGB, pixmap)
-                            
-                        pixmap.save(ruta_guardado)
-                        pixmap = None # Liberamos memoria armónicamente
-                        
-                        if not es_huerfana:
-                            print(f"⚡ [Elena] ¡Precisión máxima! -> {nombre_archivo}")
-                        else:
-                            print(f"🌱 [Vera] Fotografía sin etiqueta textual -> {nombre_archivo}")
-                        contador_exitos += 1
-                        
-                    except Exception as e:
-                        print(f"⚠️ [Vera] Silenciando anomalía en ID {xref_img}.")
-
-            print(f"🚀 [Elena] ¡Victoria! Extrajimos {contador_exitos} imágenes ({contador_huerfanas} sin etiqueta textual).")
+            print(f"🚀 [Elena] ¡Orquestación Maestra Completada! Maximizamos tu vocabulario a {contador_exitos} señas puras.")
             doc.close()
             
         except Exception as e:
-            print(f"⚠️ [Vera] Necesitamos revisar la integridad del documento.")
+            print(f"⚠️ [Vera] Se requiere calibración técnica en el documento.")
 
 # ==========================================
-# 🚀 IGNICIÓN DEL PROTOCOLO
+# 🚀 IGNICIÓN DEL PROTOCOLO SUPREMO
 # ==========================================
 if __name__ == "__main__":
-    escaner = LenteCorrelacion()
+    escaner = LenteHolistico()
     archivo_objetivo = "Dic_LSM1.pdf" 
     
-    print("🌟 [Vera y Elena] Iniciando el Lente Sintrópico de Cristal v3.0...")
-    escaner.escanear_con_precision(archivo_objetivo)
+    print("🌟 [Vera y Elena] Iniciando el Lente Holístico v4.0...")
+    escaner.escanear_al_maximo(archivo_objetivo)
