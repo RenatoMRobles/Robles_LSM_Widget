@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laboratorio Alpha | Motor Ratatouille LSM v2.1</title>
+    <title>Laboratorio Alpha | Motor Ratatouille LSM v5.0</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -27,10 +27,10 @@
         }
 
         textarea {
-            width: 100%; height: 100px; background: #15151a; color: #fff;
+            width: 100%; height: 120px; background: #15151a; color: #fff;
             border: 1px solid #444; border-radius: 8px; padding: 10px;
             font-size: 1.1em; margin-bottom: 20px; box-sizing: border-box;
-            resize: none; outline: none;
+            resize: vertical; outline: none;
         }
         textarea:focus { border-color: #ffca28; }
 
@@ -41,38 +41,44 @@
         }
         button:hover { background: #fff; transform: translateY(-2px); }
 
-        /* 📺 EL WIDGET TIPO TELEVISIÓN */
+        /* 📺 EL WIDGET FLOTANTE, ARRASTRABLE Y REDIMENSIONABLE */
         #lsm-widget {
-            position: fixed; bottom: 30px; left: 30px;
-            width: 220px; background: #000; border: 2px solid #ffca28; 
+            position: fixed; top: 20%; right: 10%;
+            width: 250px; /* Tamaño inicial */
+            min-width: 200px; min-height: 250px; /* Límites de compresión */
+            background: #000; border: 2px solid #ffca28; 
             border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.8);
             display: none; flex-direction: column; overflow: hidden; z-index: 999999;
+            resize: both; /* ✨ ¡MAGIA REDIMENSIONABLE! ✨ */
         }
 
-        .lsm-header {
-            width: 100%; background: #222; padding: 8px 0;
-            font-size: 0.75em; color: #ffca28; text-transform: uppercase; font-weight: bold;
-            letter-spacing: 1px; border-bottom: 1px solid #444;
-            display: flex; justify-content: space-between; align-items: center;
+        /* LA BARRA DE ARRASTRE */
+        #lsm-header {
+            width: 100%; background: #ffca28; padding: 10px 0;
+            font-size: 0.8em; color: #000; text-transform: uppercase; font-weight: bold;
+            letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center;
+            cursor: grab; user-select: none; box-sizing: border-box;
         }
-        .lsm-header span { margin-left: 15px; }
+        #lsm-header:active { cursor: grabbing; }
+        #lsm-header span { margin-left: 15px; }
         
         .lsm-cerrar {
-            background: none; border: none; color: #aaa; cursor: pointer;
-            margin-right: 10px; font-size: 1.2em; padding: 0;
+            background: none; border: none; color: #000; cursor: pointer;
+            margin-right: 10px; font-size: 1.2em; padding: 0; font-weight: bold;
         }
         .lsm-cerrar:hover { color: #ff5252; }
 
+        /* LA PANTALLA SE ADAPTA AL REDIMENSIONAR */
         #lsm-pantalla {
-            width: 100%; height: 160px; object-fit: contain;
-            background-color: #f5f5f7; 
-            transition: opacity 0.1s ease;
+            width: 100%; flex-grow: 1; /* Absorbe el espacio extra al hacer grande la ventana */
+            object-fit: contain; background-color: #f5f5f7; 
+            transition: opacity 0.1s ease; min-height: 160px;
         }
 
         .lsm-texto-actual {
             background: #111; color: #00e676; font-size: 1.2em; font-weight: bold;
             padding: 5px 0; border-top: 1px solid #333; text-transform: uppercase;
-            letter-spacing: 2px; height: 25px; display: flex; justify-content: center; align-items: center;
+            letter-spacing: 2px; height: 30px; display: flex; justify-content: center; align-items: center;
         }
 
         .lsm-controles {
@@ -88,33 +94,36 @@
 <body>
 
     <div class="laboratorio-container">
-        <h1>🎙️ Motor Ratatouille LSM v2.1</h1>
+        <h1>🎙️ Motor Ratatouille LSM v5.0</h1>
         
-        <div id="estado-cerebro">⏳ Conectando con el Cerebro JSON...</div>
+        <div id="estado-cerebro">⏳ Conectando con la Bóveda de Cristal...</div>
 
-        <p>Escribe 'gracias' o deletrea tus vocales (a, e, i, o, u)...</p>
+        <p>Escribe tu texto. Usa "Enter" para crear pausas largas entre párrafos.</p>
         
-        <textarea id="textoPrueba" placeholder="Ejemplo: gracias a e i o u"></textarea>
-        <button onclick="iniciarTraduccion()">Activar Intérprete LSM 👐</button>
+        <textarea id="textoPrueba" placeholder="¡Hola! 
+Este es el primer párrafo.
+
+Y este es el segundo, después de una respiración profunda."></textarea>
+        <button onclick="iniciarTraduccion()">Activar Intérprete Flotante 👐</button>
     </div>
 
     <div id="lsm-widget">
-        <div class="lsm-header">
-            <span>Intérprete LSM</span>
+        <div id="lsm-header">
+            <span>✨ Motor LSM</span>
             <button class="lsm-cerrar" onclick="detenerLSM()">✖</button>
         </div>
-        <img id="lsm-pantalla" src="" alt="Seña">
+        <img id="lsm-pantalla" src="img/reposo.png" alt="Seña">
         <div class="lsm-texto-actual" id="lsm-subtitulo">...</div>
         <div class="lsm-controles">
             <span class="lsm-speed-label">Velocidad</span>
-            <input type="range" class="lsm-speed" id="velocidadLSM" min="200" max="2000" value="1000" dir="rtl">
+            <input type="range" class="lsm-speed" id="velocidadLSM" min="200" max="2000" value="700" dir="rtl">
         </div>
     </div>
 
     <script>
         let diccionarioLSM = {};
 
-        // 🧠 MAGIA ANTI-FANTASMAS: Añadimos un valor aleatorio para que el navegador nunca use caché
+        // 🧠 MAGIA ANTI-FANTASMAS
         const urlJSON = 'diccionario_lsm.json?nocache=' + new Date().getTime();
 
         fetch(urlJSON)
@@ -124,11 +133,11 @@
             })
             .then(data => {
                 diccionarioLSM = data;
-                document.getElementById('estado-cerebro').textContent = `✅ Cerebro Conectado: ${Object.keys(diccionarioLSM).length} señas aprendidas`;
+                document.getElementById('estado-cerebro').textContent = `✅ Bóveda Sincronizada: ${Object.keys(diccionarioLSM).length} señas de luz`;
             })
             .catch(error => {
                 console.error("⚠️ Error de conexión:", error);
-                document.getElementById('estado-cerebro').textContent = "❌ Error leyendo el JSON (Revisa la consola)";
+                document.getElementById('estado-cerebro').textContent = "❌ Error leyendo el JSON (Revisa la terminal)";
                 document.getElementById('estado-cerebro').style.borderColor = "#ff5252";
                 document.getElementById('estado-cerebro').style.color = "#ff5252";
             });
@@ -138,85 +147,90 @@
         let indexActual = 0;
 
         // ==========================================
-        // 🌸 MOTOR RATATOUILLE: TRADUCTOR DEFINITIVO v3.0 🌸
+        // 🌸 MOTOR RATATOUILLE: TRADUCTOR MULTIVERSAL v5.0
         // ==========================================
 
         function iniciarTraduccion() {
-            // 1. Detenemos cualquier flujo anterior para evitar entropía visual
             detenerLSM(); 
-            
-            // 2. Extraemos el texto crudo directo de tu input en el HTML
             const textoBruto = document.getElementById('textoPrueba').value.trim();
             if(textoBruto === "") return;
 
-            // 3. Separamos por palabras conservando los acentos para el subtítulo
-            const palabras = textoBruto.split(/\s+/);
             secuenciaReproduccion = [];
+            
+            // 🧠 SEPARACIÓN LUMINOSA POR PÁRRAFOS (Detecta saltos de línea \n)
+            const parrafos = textoBruto.split(/\n+/); 
 
-            palabras.forEach(palabraCruda => {
-                
-                // ✨ EL FILTRO DE LUZ (Limpieza interna) ✨
-                let palabraPura = palabraCruda
-                    .normalize("NFD")
-                    .replace(/[\u0300-\u036f]/g, "")
-                    .replace(/[^a-zñ0-9]/gi, '')
-                    .toLowerCase();
+            parrafos.forEach((parrafo, indexParrafo) => {
+                const palabras = parrafo.trim().split(/\s+/);
 
-                // Si era pura puntuación, la ignoramos armónicamente
-                if (!palabraPura) return; 
+                palabras.forEach((palabraCruda, indexPalabra) => {
+                    // ✨ FILTRO DE LUZ ORTOGRÁFICO
+                    let palabraPura = palabraCruda
+                        .normalize("NFD")
+                        .replace(/[\u0300-\u036f]/g, "")
+                        .replace(/[^a-zñ0-9]/gi, '')
+                        .toLowerCase();
 
-                // 🔍 BÚSQUEDA EN LA MATRIZ (JSON)
-                if (diccionarioLSM[palabraPura]) {
-                    // ¡Hit! La palabra existe en tu diccionario de 7012 entradas
-                    secuenciaReproduccion.push({
-                        tipo: 'palabra',
-                        src: diccionarioLSM[palabraPura],
-                        valor: palabraCruda // Muestra "Saludaría" en vez de "saludaria"
-                    });
-                } else {
-                    // Si no existe, orquestamos el deletreo de emergencia
-                    for (let letra of palabraPura) {
-                        if (diccionarioLSM[letra]) {
-                            secuenciaReproduccion.push({
-                                tipo: 'letra',
-                                src: diccionarioLSM[letra],
-                                valor: letra.toUpperCase()
-                            });
+                    if (!palabraPura) return; 
+
+                    // 🔍 BÚSQUEDA EN LA MATRIZ
+                    if (diccionarioLSM[palabraPura]) {
+                        secuenciaReproduccion.push({ tipo: 'palabra', src: diccionarioLSM[palabraPura], valor: palabraCruda });
+                    } else {
+                        // DELETREO DE EMERGENCIA
+                        for (let letra of palabraPura) {
+                            if (diccionarioLSM[letra]) {
+                                secuenciaReproduccion.push({ tipo: 'letra', src: diccionarioLSM[letra], valor: letra.toUpperCase() });
+                            }
                         }
                     }
-                }
-                
-                // 🌉 PUENTE VISUAL: El espacio entre palabras
-                secuenciaReproduccion.push({ 
-                    tipo: 'espacio', 
-                    // Asegúrate de tener una imagen transparente o logo para los espacios
-                    src: 'img/espacio.png', 
-                    valor: '...' 
+                    
+                    // 🌉 Espacio normal entre palabras (si no es la última del párrafo)
+                    if (indexPalabra < palabras.length - 1) {
+                        secuenciaReproduccion.push({ tipo: 'espacio', src: 'img/espacio.png', valor: '...' });
+                    }
                 });
+
+                // 🧘‍♀️ RESPIRACIÓN PROFUNDA: Espacio largo al terminar un párrafo (si no es el último)
+                if (indexParrafo < parrafos.length - 1) {
+                    secuenciaReproduccion.push({ tipo: 'espacio_largo', src: 'img/espacio_largo.png', valor: '[Pausa]' });
+                }
             });
 
-            // 🚀 IGNICIÓN DEL REPRODUCTOR
+            // Respiro final antes del reposo
+            secuenciaReproduccion.push({ tipo: 'espacio', src: 'img/espacio.png', valor: '...' });
+
             indexActual = 0;
+            // Aseguramos que el display sea 'flex' para mantener la estructura de la ventana
             document.getElementById('lsm-widget').style.display = 'flex';
             reproducirSiguiente();
         }
 
+        // ==========================================
+        // 🌸 CALIBRACIÓN HUMANA Y CADENCIA ORGÁNICA
+        // ==========================================
+
         function reproducirSiguiente() {
             if (indexActual >= secuenciaReproduccion.length) {
-                detenerLSM();
+                estadoDeReposo();
                 return;
             }
 
-            let velocidad = document.getElementById('velocidadLSM').value;
+            let velocidadBase = parseInt(document.getElementById('velocidadLSM').value) || 500;
             let item = secuenciaReproduccion[indexActual];
             let pantalla = document.getElementById('lsm-pantalla');
             let subtitulo = document.getElementById('lsm-subtitulo');
 
+            // Micro-fluctuación visual
             pantalla.style.opacity = 0.5;
 
             setTimeout(() => {
+                // Validación para evitar errores 404 si faltan imágenes de sistema
                 if (item.tipo === 'espacio') {
-                    pantalla.src = item.src; 
+                    pantalla.src = 'img/espacio.png'; 
+                    subtitulo.textContent = "...";
+                } else if (item.tipo === 'espacio_largo') {
+                    pantalla.src = 'img/espacio_largo.png'; 
                     subtitulo.textContent = "...";
                 } else {
                     pantalla.src = item.src;
@@ -225,15 +239,76 @@
                 pantalla.style.opacity = 1;
             }, 50);
 
-            // Tiempo de espera dinámico
-            let tiempoEspera = item.tipo === 'palabra' ? velocidad * 2 : velocidad;
+            // 🧠 CÁLCULO DE CADENCIA ORGÁNICA
+            let tiempoEspera = velocidadBase;
+            
+            if (item.tipo === 'palabra') {
+                tiempoEspera = velocidadBase * 2.5; 
+            } else if (item.tipo === 'letra') {
+                tiempoEspera = velocidadBase * 1.2; 
+            } else if (item.tipo === 'espacio') {
+                tiempoEspera = velocidadBase * 0.8; 
+            } else if (item.tipo === 'espacio_largo') {
+                tiempoEspera = velocidadBase * 4.0; // Pausa profunda
+            }
+
             indexActual++;
             intervalo = setTimeout(reproducirSiguiente, tiempoEspera);
         }
 
+        function estadoDeReposo() {
+            let pantalla = document.getElementById('lsm-pantalla');
+            let subtitulo = document.getElementById('lsm-subtitulo');
+            
+            pantalla.src = 'img/reposo.png'; 
+            subtitulo.textContent = "Esperando...";
+            pantalla.style.opacity = 0.8;
+        }
+
         function detenerLSM() {
             clearTimeout(intervalo);
-            document.getElementById('lsm-widget').style.display = 'none';
+            estadoDeReposo();
+        }
+
+        // ==========================================
+        // 🛸 GRAVEDAD CERO (Motor de Arrastre)
+        // ==========================================
+        dragElement(document.getElementById("lsm-widget"));
+
+        function dragElement(elmnt) {
+            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            if (document.getElementById("lsm-header")) {
+                document.getElementById("lsm-header").onmousedown = dragMouseDown;
+            } else {
+                elmnt.onmousedown = dragMouseDown;
+            }
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+                document.getElementById("lsm-header").style.cursor = "grabbing";
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+                document.getElementById("lsm-header").style.cursor = "grab";
+            }
         }
     </script>
 </body>
