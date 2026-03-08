@@ -1,3 +1,12 @@
+import sys
+import sklearn.linear_model._sgd_fast as sgd_fast
+
+# --- PARCHE DE ILUSIÓN PARA COMPATIBILIDAD ---
+# Creamos el atributo 'Log' que el modelo antiguo busca desesperadamente
+if not hasattr(sgd_fast, 'Log'):
+    class Log: pass
+    sgd_fast.Log = Log
+# ---------------------------------------------
 import os
 import json
 import mlconjug3 
