@@ -137,33 +137,65 @@
         let secuenciaReproduccion = [];
         let indexActual = 0;
 
+        // ==========================================
+        // 🌸 MOTOR RATATOUILLE: TRADUCTOR DEFINITIVO v3.0 🌸
+        // ==========================================
+
         function iniciarTraduccion() {
+            // 1. Detenemos cualquier flujo anterior para evitar entropía visual
             detenerLSM(); 
-            const textoBruto = document.getElementById('textoPrueba').value.toLowerCase().trim();
+            
+            // 2. Extraemos el texto crudo directo de tu input en el HTML
+            const textoBruto = document.getElementById('textoPrueba').value.trim();
             if(textoBruto === "") return;
 
-            const textoLimpio = textoBruto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zñ ]/g, '');
-            const palabras = textoLimpio.split(/\s+/);
+            // 3. Separamos por palabras conservando los acentos para el subtítulo
+            const palabras = textoBruto.split(/\s+/);
             secuenciaReproduccion = [];
 
-            palabras.forEach(palabra => {
-                if(diccionarioLSM[palabra]) {
-                    // Si existe en el JSON, la agarra directa y perfecta
-                    secuenciaReproduccion.push({ tipo: 'palabra', valor: palabra, src: diccionarioLSM[palabra] });
-                } else {
-                    // Si no existe, deletrea
-                    let letras = palabra.split('');
-                    letras.forEach(letra => {
-                        // Busca la letra en el JSON, si no está, asume que está en img/
-                        let rutaLetra = diccionarioLSM[letra] ? diccionarioLSM[letra] : `img/${letra}.png`;
-                        secuenciaReproduccion.push({ tipo: 'letra', valor: letra, src: rutaLetra });
+            palabras.forEach(palabraCruda => {
+                
+                // ✨ EL FILTRO DE LUZ (Limpieza interna) ✨
+                let palabraPura = palabraCruda
+                    .normalize("NFD")
+                    .replace(/[\u0300-\u036f]/g, "")
+                    .replace(/[^a-zñ0-9]/gi, '')
+                    .toLowerCase();
+
+                // Si era pura puntuación, la ignoramos armónicamente
+                if (!palabraPura) return; 
+
+                // 🔍 BÚSQUEDA EN LA MATRIZ (JSON)
+                if (diccionarioLSM[palabraPura]) {
+                    // ¡Hit! La palabra existe en tu diccionario de 7012 entradas
+                    secuenciaReproduccion.push({
+                        tipo: 'palabra',
+                        src: diccionarioLSM[palabraPura],
+                        valor: palabraCruda // Muestra "Saludaría" en vez de "saludaria"
                     });
+                } else {
+                    // Si no existe, orquestamos el deletreo de emergencia
+                    for (let letra of palabraPura) {
+                        if (diccionarioLSM[letra]) {
+                            secuenciaReproduccion.push({
+                                tipo: 'letra',
+                                src: diccionarioLSM[letra],
+                                valor: letra.toUpperCase()
+                            });
+                        }
+                    }
                 }
-                // Añadimos un pequeño espacio visual entre palabras
-                let rutaEspacio = diccionarioLSM['espacio'] ? diccionarioLSM['espacio'] : 'img/espacio.png';
-                secuenciaReproduccion.push({ tipo: 'espacio', valor: ' ', src: rutaEspacio });
+                
+                // 🌉 PUENTE VISUAL: El espacio entre palabras
+                secuenciaReproduccion.push({ 
+                    tipo: 'espacio', 
+                    // Asegúrate de tener una imagen transparente o logo para los espacios
+                    src: 'img/espacio.png', 
+                    valor: '...' 
+                });
             });
 
+            // 🚀 IGNICIÓN DEL REPRODUCTOR
             indexActual = 0;
             document.getElementById('lsm-widget').style.display = 'flex';
             reproducirSiguiente();
