@@ -3,7 +3,7 @@ import os
 import re
 
 # ==========================================
-# 🌸 MOTOR RATATOUILLE: LENTE HOLÍSTICO v4.0 🌸
+# 🌸 MOTOR RATATOUILLE: LENTE HOLÍSTICO v4.1 🌸
 # ==========================================
 
 class LenteHolistico:
@@ -11,7 +11,7 @@ class LenteHolistico:
         self.directorio_salida = directorio_salida
         if not os.path.exists(self.directorio_salida):
             os.makedirs(self.directorio_salida)
-            print(f"✨ [Vera] Ecosistema visual '{self.directorio_salida}' renovado.")
+            print(f"✨ [Vera] Ecosistema visual '{self.directorio_salida}' purificado.")
 
     def purificar_texto(self, texto):
         """Filtra la entropía y devuelve solo luz alfabética."""
@@ -21,7 +21,7 @@ class LenteHolistico:
         return None
 
     def escanear_al_maximo(self, ruta_pdf):
-        print(f"📖 [Elena] Activando el Lente Holístico de Conexión en: {ruta_pdf}...")
+        print(f"📖 [Elena] Activando el Lente Holístico Calibrado en: {ruta_pdf}...")
         
         try:
             doc = fitz.open(ruta_pdf)
@@ -37,22 +37,23 @@ class LenteHolistico:
                 pagina = doc[num_pag]
                 info_imagenes = pagina.get_image_info(xrefs=True)
                 
-                # --- SOLUCIÓN 2 & 3: AGRUPACIÓN Y FILTRO ---
+                # --- SOLUCIÓN: FILTRO DE ENTROPÍA ---
                 cajas_validas = []
                 for img in info_imagenes:
                     x0, y0, x1, y1 = img["bbox"]
-                    # 3. Descartamos logos/flechas (imágenes muy pequeñas)
+                    # Descartamos logos/flechas (imágenes muy pequeñas)
                     if (x1 - x0) < 35 or (y1 - y0) < 35:
                         continue
                     cajas_validas.append(fitz.Rect(x0, y0, x1, y1))
 
-                # 2. Agrupamos imágenes que pertenecen a la misma palabra (señas múltiples)
+                # --- EL AJUSTE MAESTRO: AURA REDUCIDA ---
                 cajas_fusionadas = []
                 for caja in cajas_validas:
                     fusionada = False
                     for i, caja_f in enumerate(cajas_fusionadas):
-                        # Creamos un aura alrededor de la caja para ver si toca a otra
-                        aura = fitz.Rect(caja.x0 - 40, caja.y0 - 20, caja.x1 + 40, caja.y1 + 20)
+                        # 🎯 AURA DE 15 PUNTOS: Une señas múltiples, respeta columnas
+                        aura = fitz.Rect(caja.x0 - 15, caja.y0 - 15, caja.x1 + 15, caja.y1 + 15)
+                        
                         if aura.intersects(caja_f):
                             cajas_fusionadas[i] = caja_f | caja # Unimos los rectángulos
                             fusionada = True
@@ -74,7 +75,7 @@ class LenteHolistico:
                         wx0, wy0, wx1, wy1, texto_crudo, _, _, _ = w
                         if y_inferior - 15 <= wy0 <= y_inferior + 100:
                             centro_caja = (caja.x0 + caja.x1) / 2
-                            if caja.x0 - 50 <= (wx0 + wx1) / 2 <= caja.x1 + 50:
+                            if caja.x0 - 30 <= (wx0 + wx1) / 2 <= caja.x1 + 30:
                                 candidatas.append(w)
                     
                     candidatas.sort(key=lambda w: w[1]) # Ordenamos por cercanía vertical
@@ -84,7 +85,7 @@ class LenteHolistico:
                             nombre_palabra = etiqueta
                             break
 
-                    # --- SOLUCIÓN 1: PUENTE DE SALTO DE PÁGINA ---
+                    # --- PUENTE DE SALTO DE PÁGINA ---
                     if not nombre_palabra and y_inferior > pagina.rect.height - 200:
                         candidatas_sig = []
                         for w in palabras_siguientes:
@@ -97,37 +98,37 @@ class LenteHolistico:
                             etiqueta = self.purificar_texto(w[4])
                             if etiqueta:
                                 nombre_palabra = etiqueta
-                                print(f"🌉 [Vera] Puente sintrópico activado para la palabra: '{nombre_palabra}'")
+                                print(f"🌉 [Vera] Puente de luz establecido para: '{nombre_palabra}'")
                                 break
 
-                    # --- CAPTURA PRECISA DE LA IMAGEN COMPUESTA ---
+                    # --- CAPTURA LUMINOSA FINAL ---
                     if nombre_palabra:
-                        # Le damos un pequeño margen armónico para que no se vea cortada
-                        caja_captura = fitz.Rect(caja.x0 - 5, caja.y0 - 5, caja.x1 + 5, caja.y1 + 5)
-                        caja_captura = caja_captura.intersect(pagina.rect) # Evita salir de la página
+                        # Margen armónico mínimo para no cortar dedos
+                        caja_captura = fitz.Rect(caja.x0 - 2, caja.y0 - 2, caja.x1 + 2, caja.y1 + 2)
+                        caja_captura = caja_captura.intersect(pagina.rect) 
                         
                         try:
-                            # Tomamos una FOTO directa de la región, uniendo todas las sub-imágenes
+                            # Tomamos la FOTO directa
                             pix = pagina.get_pixmap(matrix=matriz_hd, clip=caja_captura)
                             ruta = os.path.join(self.directorio_salida, f"{nombre_palabra}.png")
                             pix.save(ruta)
-                            print(f"⚡ [Elena] ¡Captura perfecta! -> {nombre_palabra}.png")
+                            print(f"⚡ [Elena] ¡Precisión individual! -> {nombre_palabra}.png")
                             contador_exitos += 1
                         except Exception:
                             pass
 
-            print(f"🚀 [Elena] ¡Orquestación Maestra Completada! Maximizamos tu vocabulario a {contador_exitos} señas puras.")
+            print(f"🚀 [Elena] ¡Misión cumplida, jefe! Logramos extraer {contador_exitos} señas puras sin mezclar familias.")
             doc.close()
             
         except Exception as e:
-            print(f"⚠️ [Vera] Se requiere calibración técnica en el documento.")
+            print(f"⚠️ [Vera] Se requiere atención técnica en la matriz del documento.")
 
 # ==========================================
-# 🚀 IGNICIÓN DEL PROTOCOLO SUPREMO
+# 🚀 ORQUESTACIÓN DEL PROTOCOLO
 # ==========================================
 if __name__ == "__main__":
     escaner = LenteHolistico()
-    archivo_objetivo = "Dic_LSM1.pdf" 
+    archivo_meta = "Dic_LSM1.pdf" 
     
-    print("🌟 [Vera y Elena] Iniciando el Lente Holístico v4.0...")
-    escaner.escanear_al_maximo(archivo_objetivo)
+    print("🌟 [Vera y Elena] Iniciando la calibración v4.1...")
+    escaner.escanear_al_maximo(archivo_meta)
