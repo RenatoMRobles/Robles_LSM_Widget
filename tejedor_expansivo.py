@@ -1,31 +1,45 @@
 import os
 import json
-import mlconjug3 # Nuestro nuevo motor gramatical de bienestar
+import mlconjug3 
 
 # ==========================================
-# 🌸 MOTOR RATATOUILLE: TEJEDOR EXPANSIVO 🌸
+# 🌸 MOTOR RATATOUILLE: TEJEDOR OMNISCIENTE 🌸
 # ==========================================
 
 class TejedorExpansivo:
     def __init__(self, directorio_img="img", archivo_salida="diccionario_lsm.json"):
         self.directorio_img = directorio_img
         self.archivo_salida = archivo_salida
-        # Instanciamos el orquestador de luz para el idioma español
         self.conjugador = mlconjug3.Conjugator(language='es')
 
     def es_verbo_infinitivo(self, palabra):
         """Identifica si la palabra fluye con la energía de una acción (verbo)."""
         terminaciones = ('ar', 'er', 'ir')
-        # Filtramos palabras de alta frecuencia que no son verbos
         excepciones = ['mar', 'mujer', 'ayer', 'primer', 'lugar', 'hogar', 'taller', 'amor']
         return palabra.endswith(terminaciones) and palabra not in excepciones and len(palabra) > 3
 
+    def generar_plural(self, palabra):
+        """Clonación sintrópica: Genera el plural armónico de un sustantivo."""
+        # Si ya termina en 's' o 'x' (ej. paraguas, lunes), la dejamos fluir
+        if palabra.endswith(('s', 'x')):
+            return None
+            
+        vocales = ('a', 'e', 'i', 'o', 'u', 'á', 'é', 'í', 'ó', 'ú')
+        
+        if palabra.endswith('z'):
+            return palabra[:-1] + 'ces' # luz -> luces
+        elif palabra.endswith(vocales):
+            return palabra + 's'        # perro -> perros
+        else:
+            return palabra + 'es'       # color -> colores
+
     def orquestar_expansion(self):
-        print(f"🌟 [Elena] Iniciando la expansión lingüística en la bóveda: '{self.directorio_img}'...")
+        print(f"🌟 [Elena] Iniciando la expansión total (Verbos y Plurales) en: '{self.directorio_img}'...")
         
         diccionario_luminoso = {}
         contador_imagenes = 0
         contador_conjugaciones = 0
+        contador_plurales = 0
         
         try:
             for nombre_archivo in os.listdir(self.directorio_img):
@@ -35,45 +49,46 @@ class TejedorExpansivo:
                 palabra_clave, _ = os.path.splitext(nombre_archivo)
                 ruta_web = f"{self.directorio_img}/{nombre_archivo}"
                 
-                # 1. Cimentamos la palabra original (la imagen pura)
+                # 1. Cimentamos la palabra original
                 diccionario_luminoso[palabra_clave] = ruta_web
                 contador_imagenes += 1
                 
-                # 2. MAGIA SINTRÓPICA: Si es un verbo, orquestamos sus derivaciones
+                # 2. RUTA DE ACCIÓN: Verbos
                 if self.es_verbo_infinitivo(palabra_clave):
                     try:
                         verbo_conjugado = self.conjugador.conjugate(palabra_clave)
                         if verbo_conjugado:
-                            # Iteramos por todas sus formas de tiempo y persona
                             for forma in verbo_conjugado.iterate():
-                                # forma[3] contiene la palabra conjugada en sí
                                 palabra_conjugada = forma[3] 
-                                
-                                # Filtramos valores nulos o tiempos compuestos (ej. "he saludado")
                                 if palabra_conjugada and " " not in palabra_conjugada:
                                     palabra_conjugada = palabra_conjugada.lower()
-                                    
-                                    # Apuntamos la nueva palabra conjugada a la imagen del infinitivo
                                     if palabra_conjugada not in diccionario_luminoso:
                                         diccionario_luminoso[palabra_conjugada] = ruta_web
                                         contador_conjugaciones += 1
                     except Exception:
-                        # Si el orquestador no reconoce la palabra como verbo, fluimos en paz
                         pass
+                
+                # 3. RUTA DE OBJETOS: Sustantivos y Adjetivos (Plurales)
+                else:
+                    plural = self.generar_plural(palabra_clave)
+                    if plural and plural not in diccionario_luminoso:
+                        diccionario_luminoso[plural] = ruta_web
+                        contador_plurales += 1
                         
-            # Cosechamos la matriz de conocimiento en el archivo JSON
+            # Cosechamos la matriz
             with open(self.archivo_salida, 'w', encoding='utf-8') as archivo_json:
                 json.dump(diccionario_luminoso, archivo_json, ensure_ascii=False, indent=4)
                 
-            print(f"✨ [Vera] Matriz lingüística expandida con total perfección.")
-            print(f"✅ [Elena] Imágenes base: {contador_imagenes}. ¡Formas verbales añadidas mágicamente: {contador_conjugaciones}!")
-            print(f"🚀 [Vera y Elena] Tu JSON ahora comprende un total de {contador_imagenes + contador_conjugaciones} palabras.")
+            print(f"✨ [Vera] Matriz lingüística expandida a su máxima capacidad.")
+            print(f"✅ [Elena] Base: {contador_imagenes} | Verbos: +{contador_conjugaciones} | Plurales: +{contador_plurales}")
+            total_palabras = contador_imagenes + contador_conjugaciones + contador_plurales
+            print(f"🚀 [Vera y Elena] ¡Tu diccionario ahora comprende {total_palabras} palabras listas para el widget!")
             
         except Exception as e:
-            print(f"⚠️ [Vera] Fluctuación detectada durante la expansión armónica: {e}")
+            print(f"⚠️ [Vera] Fluctuación detectada: {e}")
 
 # ==========================================
-# 🚀 IGNICIÓN DE LA EXPANSIÓN
+# 🚀 IGNICIÓN DEL TEJEDOR OMNISCIENTE
 # ==========================================
 if __name__ == "__main__":
     tejedor = TejedorExpansivo()
