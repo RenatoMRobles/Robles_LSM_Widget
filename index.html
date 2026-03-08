@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio Alpha | Motor Ratatouille LSM v2.0</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1a1a20; color: #fff;
+            padding: 50px; text-align: center;
+        }
+
+        .laboratorio-container {
+            max-width: 600px; margin: 0 auto; background: #2a2a35;
+            padding: 30px; border-radius: 15px; border: 1px solid #ffca28;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        h1 { color: #ffca28; margin-top: 0; }
+        
+        textarea {
+            width: 100%; height: 100px; background: #15151a; color: #fff;
+            border: 1px solid #444; border-radius: 8px; padding: 10px;
+            font-size: 1.1em; margin-bottom: 20px; box-sizing: border-box;
+            resize: none; outline: none;
+        }
+        textarea:focus { border-color: #ffca28; }
+
+        button {
+            background: #ffca28; color: #000; font-weight: bold; border: none;
+            padding: 12px 25px; border-radius: 8px; cursor: pointer; font-size: 1em;
+            transition: all 0.3s ease; box-shadow: 0 5px 15px rgba(255, 202, 40, 0.3);
+        }
+        button:hover { background: #fff; transform: translateY(-2px); }
+
+        /* 📺 EL WIDGET TIPO TELEVISIÓN (Esquina inferior) */
+        #lsm-widget {
+            position: fixed; bottom: 30px; left: 30px;
+            width: 220px; background: #000; border: 2px solid #ffca28; 
+            border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+            display: none; flex-direction: column; overflow: hidden; z-index: 999999;
+            transition: opacity 0.3s ease;
+        }
+
+        .lsm-header {
+            width: 100%; background: #222; padding: 8px 0;
+            font-size: 0.75em; color: #ffca28; text-transform: uppercase; font-weight: bold;
+            letter-spacing: 1px; border-bottom: 1px solid #444;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .lsm-header span { margin-left: 15px; }
+        
+        .lsm-cerrar {
+            background: none; border: none; color: #aaa; cursor: pointer;
+            margin-right: 10px; font-size: 1.2em; padding: 0;
+        }
+        .lsm-cerrar:hover { color: #ff5252; }
+
+        #lsm-pantalla {
+            width: 100%; height: 160px; object-fit: contain;
+            background-color: #f5f5f7; /* Blanco para que destaquen las manitas PNG */
+            transition: opacity 0.1s ease;
+        }
+
+        .lsm-texto-actual {
+            background: #111; color: #00e676; font-size: 1.2em; font-weight: bold;
+            padding: 5px 0; border-top: 1px solid #333; text-transform: uppercase;
+            letter-spacing: 2px; height: 25px; display: flex; justify-content: center; align-items: center;
+        }
+
+        .lsm-controles {
+            width: 100%; display: flex; justify-content: space-between;
+            padding: 10px 15px; background: #222; border-top: 1px solid #444;
+            box-sizing: border-box; align-items: center;
+        }
+        
+        .lsm-speed-label { font-size: 0.7em; color: #aaa; margin-right: 5px; }
+        .lsm-speed { width: 80px; accent-color: #ffca28; }
+    </style>
+</head>
+<body>
+
+    <div class="laboratorio-container">
+        <h1>🎙️ Motor Ratatouille LSM v2.0</h1>
+        <p>Escribe una frase. Si la palabra está en el diccionario, la mostrará completa. Si no, ¡la deletreará inteligentemente!</p>
+        
+        <textarea id="textoPrueba" placeholder="Escribe 'hola' o deletrea las vocales..."></textarea>
+        <button onclick="iniciarTraduccion()">Activar Intérprete LSM 👐</button>
+    </div>
+
+    <div id="lsm-widget">
+        <div class="lsm-header">
+            <span>Intérprete LSM</span>
+            <button class="lsm-cerrar" onclick="detenerLSM()">✖</button>
+        </div>
+        
+        <img id="lsm-pantalla" src="" alt="Seña">
+        
+        <div class="lsm-texto-actual" id="lsm-subtitulo">...</div>
+        
+        <div class="lsm-controles">
+            <span class="lsm-speed-label">Velocidad</span>
+            <input type="range" class="lsm-speed" id="velocidadLSM" min="200" max="2000" value="1000" dir="rtl" title="Ajustar velocidad">
+        </div>
+    </div>
+
+    <script>
+        // 🧠 1. EL DICCIONARIO JSON (Fase 2)
+        // Aquí conectaremos tus futuras imágenes de palabras completas o GIFs.
+        // Si tienes una foto llamada 'hola.png' o 'gracias.gif', la pones aquí.
+        const diccionarioLSM = {
+            "hola": "img/hola.gif",
+            "gracias": "img/gracias.gif",
+            "bienestar": "img/bienestar.png"
+        };
+
+        // Variables de control
+        let intervalo;
+        let secuenciaReproduccion = [];
+        let indexActual = 0;
+
+        function iniciarTraduccion() {
+            detenerLSM(); // Limpiar procesos anteriores
+            const textoBruto = document.getElementById('textoPrueba').value.toLowerCase().trim();
+            if(textoBruto === "") return;
+
+            // Limpiamos el texto de caracteres especiales, dejamos letras, ñ y espacios
+            const textoLimpio = textoBruto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zñ ]/g, '');
+            
+            // Separamos por palabras
+            const palabras = textoLimpio.split(/\s+/);
+            secuenciaReproduccion = [];
+
+            // 🧠 2. ALGORITMO DE CASCADA
+            palabras.forEach(palabra => {
+                if(diccionarioLSM[palabra]) {
+                    // Si existe la palabra completa, añadimos el objeto completo
+                    secuenciaReproduccion.push({ tipo: 'palabra', valor: palabra, src: diccionarioLSM[palabra] });
+                } else {
+                    // Si no existe, la rompemos en letras (Dactilología)
+                    let letras = palabra.split('');
+                    letras.forEach(letra => {
+                        // Como ya tienes las vocales.png, esto las llamará automáticamente
+                        secuenciaReproduccion.push({ tipo: 'letra', valor: letra, src: `img/${letra}.png` });
+                    });
+                }
+                // Añadimos un espacio visual entre palabras
+                secuenciaReproduccion.push({ tipo: 'espacio', valor: ' ', src: 'img/espacio.png' });
+            });
+
+            indexActual = 0;
+            document.getElementById('lsm-widget').style.display = 'flex';
+            reproducirSiguiente();
+        }
+
+        function reproducirSiguiente() {
+            if (indexActual >= secuenciaReproduccion.length) {
+                detenerLSM();
+                return;
+            }
+
+            let velocidad = document.getElementById('velocidadLSM').value;
+            let item = secuenciaReproduccion[indexActual];
+            let pantalla = document.getElementById('lsm-pantalla');
+            let subtitulo = document.getElementById('lsm-subtitulo');
+
+            // Efecto visual de transición súper ligero
+            pantalla.style.opacity = 0.5;
+
+            setTimeout(() => {
+                if (item.tipo === 'espacio') {
+                    pantalla.src = item.src; // Asegúrate de tener un img/espacio.png (puede ser una mano en reposo o transparente)
+                    subtitulo.textContent = "...";
+                } else {
+                    pantalla.src = item.src;
+                    subtitulo.textContent = item.valor;
+                }
+                pantalla.style.opacity = 1;
+            }, 50);
+
+            // Determinar cuánto tiempo se queda la imagen.
+            // Si es una palabra completa (GIF), le damos el doble de tiempo para que se aprecie bien.
+            let tiempoEspera = item.tipo === 'palabra' ? velocidad * 2 : velocidad;
+
+            indexActual++;
+            intervalo = setTimeout(reproducirSiguiente, tiempoEspera);
+        }
+
+        function detenerLSM() {
+            clearTimeout(intervalo);
+            document.getElementById('lsm-widget').style.display = 'none';
+        }
+
+        // Actualizar velocidad en tiempo real si está reproduciendo
+        document.getElementById('velocidadLSM').addEventListener('change', () => {
+            // El cambio se aplicará en el próximo ciclo del setTimeout
+        });
+    </script>
+</body>
+</html>
