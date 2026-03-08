@@ -317,6 +317,45 @@ Y este es el segundo, después de una respiración profunda."></textarea>
                 document.getElementById("lsm-header").style.cursor = "grab";
             }
         }
+
+        // ==========================================
+        // 👁️ EL OJO SINTRÓPICO (Conexión con la Academia Robles Bienestar)
+        // ==========================================
+        
+        function enlazarConAcademia(idContenedorChat) {
+            const chatElement = document.getElementById(idContenedorChat);
+            if (!chatElement) {
+                console.log("⚠️ [Vera] El contenedor del chat no se encuentra en este plano.");
+                return;
+            }
+
+            console.log("🌟 [Vera] Enlace telepático establecido. Vigilando a los profesores...");
+
+            // Creamos al observador de luz
+            const observador = new MutationObserver((mutaciones) => {
+                mutaciones.forEach((mutacion) => {
+                    // Si detectamos que se agregó un nuevo nodo (un nuevo mensaje al chat)
+                    if (mutacion.addedNodes.length > 0) {
+                        mutacion.addedNodes.forEach((nodo) => {
+                            // Verificamos que sea un elemento HTML con texto visible
+                            if (nodo.nodeType === 1 && nodo.innerText) {
+                                
+                                console.log("⚡ [Elena] ¡Mensaje atrapado! Enviando al Motor Ratatouille...");
+                                
+                                // Mandamos el texto de la profesora directo al widget
+                                iniciarTraduccion(nodo.innerText);
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Le decimos al observador que vigile el chat y todos sus hijos internos
+            observador.observe(chatElement, { childList: true, subtree: true });
+        }
+
+        // ¿Cómo activarlo en la Academia? 
+        // Solo llamarías a: enlazarConAcademia('ID_DE_TU_CAJA_DE_CHAT_AQUI');
     </script>
 </body>
 </html>
