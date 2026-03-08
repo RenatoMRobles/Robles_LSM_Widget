@@ -150,13 +150,20 @@ Y este es el segundo, después de una respiración profunda."></textarea>
         // 🌸 MOTOR RATATOUILLE: TRADUCTOR MULTIVERSAL v5.0
         // ==========================================
 
-        function iniciarTraduccion() {
+        // ==========================================
+        // 🌸 MOTOR RATATOUILLE: TRADUCTOR MULTIVERSAL v5.1
+        // ==========================================
+
+        // ✨ Ahora aceptamos "textoExterno" inyectado mágicamente
+        function iniciarTraduccion(textoExterno = null) {
             detenerLSM(); 
-            const textoBruto = document.getElementById('textoPrueba').value.trim();
+            
+            // Si la Academia nos manda texto, lo usamos. Si no, usamos la caja de prueba manual.
+            const textoBruto = textoExterno !== null ? textoExterno : document.getElementById('textoPrueba').value.trim();
             if(textoBruto === "") return;
 
             secuenciaReproduccion = [];
-            
+                
             // 🧠 SEPARACIÓN LUMINOSA POR PÁRRAFOS (Detecta saltos de línea \n)
             const parrafos = textoBruto.split(/\n+/); 
 
