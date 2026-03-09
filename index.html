@@ -158,66 +158,81 @@ Y este es el segundo, después de una respiración profunda."></textarea>
         // ==========================================
 
         // ✨ Ahora aceptamos "textoExterno" inyectado mágicamente
+        // Variable para controlar qué capa del crossfade está activa
+        let capaActiva = 1;
+
+        // ==========================================
+        // 🌸 MOTOR RATATOUILLE v6.0: BIGRAMAS Y FLUIDEZ
+        // ==========================================
+
         function iniciarTraduccion(textoExterno = null) {
             detenerLSM(); 
-            
-            // Si la Academia nos manda texto, lo usamos. Si no, usamos la caja de prueba manual.
             const textoBruto = textoExterno !== null ? textoExterno : document.getElementById('textoPrueba').value.trim();
             if(textoBruto === "") return;
 
             secuenciaReproduccion = [];
-                
-            // 🧠 SEPARACIÓN LUMINOSA POR PÁRRAFOS (Detecta saltos de línea \n)
             const parrafos = textoBruto.split(/\n+/); 
 
             parrafos.forEach((parrafo, indexParrafo) => {
-                const palabras = parrafo.trim().split(/\s+/);
+                const palabrasCrudas = parrafo.trim().split(/\s+/);
+                
+                // Limpiamos todo el array de palabras primero
+                const palabrasLimpias = palabrasCrudas.map(p => 
+                    p.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zñ0-9]/gi, '').toLowerCase()
+                );
 
-                palabras.forEach((palabraCruda, indexPalabra) => {
-                    // ✨ FILTRO DE LUZ ORTOGRÁFICO
-                    let palabraPura = palabraCruda
-                        .normalize("NFD")
-                        .replace(/[\u0300-\u036f]/g, "")
-                        .replace(/[^a-zñ0-9]/gi, '')
-                        .toLowerCase();
+                for (let i = 0; i < palabrasLimpias.length; i++) {
+                    let pura = palabrasLimpias[i];
+                    if (!pura) continue;
 
-                    if (!palabraPura) return; 
+                    // 🧠 VISIÓN DE FUTURO (Buscando Palabras Compuestas / Bigramas)
+                    let esCompuesta = false;
+                    if (i < palabrasLimpias.length - 1) {
+                        let puraSiguiente = palabrasLimpias[i + 1];
+                        let compuesta = pura + puraSiguiente; // ej: "buenos" + "dias" = "buenosdias"
+                        
+                        if (diccionarioLSM[compuesta]) {
+                            secuenciaReproduccion.push({ 
+                                tipo: 'palabra', 
+                                src: diccionarioLSM[compuesta], 
+                                valor: palabrasCrudas[i] + " " + palabrasCrudas[i+1] 
+                            });
+                            i++; // Saltamos la siguiente palabra porque ya la fusionamos
+                            esCompuesta = true;
+                        }
+                    }
 
-                    // 🔍 BÚSQUEDA EN LA MATRIZ
-                    if (diccionarioLSM[palabraPura]) {
-                        secuenciaReproduccion.push({ tipo: 'palabra', src: diccionarioLSM[palabraPura], valor: palabraCruda });
-                    } else {
-                        // DELETREO DE EMERGENCIA
-                        for (let letra of palabraPura) {
-                            if (diccionarioLSM[letra]) {
-                                secuenciaReproduccion.push({ tipo: 'letra', src: diccionarioLSM[letra], valor: letra.toUpperCase() });
+                    // Si no fue compuesta, la procesamos normal
+                    if (!esCompuesta) {
+                        if (diccionarioLSM[pura]) {
+                            secuenciaReproduccion.push({ tipo: 'palabra', src: diccionarioLSM[pura], valor: palabrasCrudas[i] });
+                        } else {
+                            for (let letra of pura) {
+                                if (diccionarioLSM[letra]) {
+                                    secuenciaReproduccion.push({ tipo: 'letra', src: diccionarioLSM[letra], valor: letra.toUpperCase() });
+                                }
                             }
                         }
                     }
                     
-                    // 🌉 Espacio normal entre palabras (si no es la última del párrafo)
-                    if (indexPalabra < palabras.length - 1) {
+                    if (i < palabrasLimpias.length - 1) {
                         secuenciaReproduccion.push({ tipo: 'espacio', src: 'img/espacio.png', valor: '...' });
                     }
-                });
+                }
 
-                // 🧘‍♀️ RESPIRACIÓN PROFUNDA: Espacio largo al terminar un párrafo (si no es el último)
                 if (indexParrafo < parrafos.length - 1) {
                     secuenciaReproduccion.push({ tipo: 'espacio_largo', src: 'img/espacio_largo.png', valor: '[Pausa]' });
                 }
             });
 
-            // Respiro final antes del reposo
             secuenciaReproduccion.push({ tipo: 'espacio', src: 'img/espacio.png', valor: '...' });
-
             indexActual = 0;
-            // Aseguramos que el display sea 'flex' para mantener la estructura de la ventana
             document.getElementById('lsm-widget').style.display = 'flex';
             reproducirSiguiente();
         }
 
         // ==========================================
-        // 🌸 CALIBRACIÓN HUMANA Y CADENCIA ORGÁNICA
+        // 🌸 TRANSICIONES DE CRISTAL (Crossfade)
         // ==========================================
 
         function reproducirSiguiente() {
@@ -228,42 +243,114 @@ Y este es el segundo, después de una respiración profunda."></textarea>
 
             let velocidadBase = parseInt(document.getElementById('velocidadLSM').value) || 500;
             let item = secuenciaReproduccion[indexActual];
-            let pantalla = document.getElementById('lsm-pantalla');
             let subtitulo = document.getElementById('lsm-subtitulo');
-
-            // Micro-fluctuación visual
-            pantalla.style.opacity = 0.5;
-
-            setTimeout(() => {
-                // Validación para evitar errores 404 si faltan imágenes de sistema
-                if (item.tipo === 'espacio') {
-                    pantalla.src = 'img/espacio.png'; 
-                    subtitulo.textContent = "...";
-                } else if (item.tipo === 'espacio_largo') {
-                    pantalla.src = 'img/espacio_largo.png'; 
-                    subtitulo.textContent = "...";
-                } else {
-                    pantalla.src = item.src;
-                    subtitulo.textContent = item.valor;
-                }
-                pantalla.style.opacity = 1;
-            }, 50);
-
-            // 🧠 CÁLCULO DE CADENCIA ORGÁNICA
-            let tiempoEspera = velocidadBase;
             
-            if (item.tipo === 'palabra') {
-                tiempoEspera = velocidadBase * 2.5; 
-            } else if (item.tipo === 'letra') {
-                tiempoEspera = velocidadBase * 1.2; 
-            } else if (item.tipo === 'espacio') {
-                tiempoEspera = velocidadBase * 0.8; 
-            } else if (item.tipo === 'espacio_largo') {
-                tiempoEspera = velocidadBase * 4.0; // Pausa profunda
-            }
+            // Lógica de Crossfade Alternante
+            let capaEnCrecimiento = document.getElementById(`lsm-capa-${capaActiva === 1 ? 2 : 1}`);
+            let capaEnDesvanecimiento = document.getElementById(`lsm-capa-${capaActiva}`);
+
+            // Validar fuentes
+            let fuenteImagen = item.src;
+            if (item.tipo === 'espacio') fuenteImagen = 'img/espacio.png';
+            if (item.tipo === 'espacio_largo') fuenteImagen = 'img/espacio_largo.png';
+
+            // Preparamos la nueva imagen y ejecutamos el fundido
+            capaEnCrecimiento.src = fuenteImagen;
+            subtitulo.textContent = item.valor;
+            
+            capaEnCrecimiento.style.opacity = 1;
+            capaEnDesvanecimiento.style.opacity = 0;
+            
+            // Alternamos la capa activa para la siguiente iteración
+            capaActiva = capaActiva === 1 ? 2 : 1;
+
+            let tiempoEspera = velocidadBase;
+            if (item.tipo === 'palabra') tiempoEspera = velocidadBase * 2.5; 
+            else if (item.tipo === 'letra') tiempoEspera = velocidadBase * 1.2; 
+            else if (item.tipo === 'espacio') tiempoEspera = velocidadBase * 0.8; 
+            else if (item.tipo === 'espacio_largo') tiempoEspera = velocidadBase * 4.0; 
 
             indexActual++;
             intervalo = setTimeout(reproducirSiguiente, tiempoEspera);
+        }
+
+        function estadoDeReposo() {
+            let capa1 = document.getElementById('lsm-capa-1');
+            let capa2 = document.getElementById('lsm-capa-2');
+            let subtitulo = document.getElementById('lsm-subtitulo');
+            
+            // Mandamos a reposo la capa actual
+            let capaAct = capaActiva === 1 ? capa1 : capa2;
+            capaAct.src = 'img/reposo.png';
+            capaAct.style.opacity = 0.8;
+            
+            let capaOculta = capaActiva === 1 ? capa2 : capa1;
+            capaOculta.style.opacity = 0;
+
+            subtitulo.textContent = "Esperando...";
+        }
+
+        // ==========================================
+        // 🌸 CALIBRACIÓN HUMANA Y CADENCIA ORGÁNICA
+        // ==========================================
+
+        // ==========================================
+        // 🌸 TRANSICIONES DE CRISTAL (Crossfade)
+        // ==========================================
+
+        function reproducirSiguiente() {
+            if (indexActual >= secuenciaReproduccion.length) {
+                estadoDeReposo();
+                return;
+            }
+
+            let velocidadBase = parseInt(document.getElementById('velocidadLSM').value) || 500;
+            let item = secuenciaReproduccion[indexActual];
+            let subtitulo = document.getElementById('lsm-subtitulo');
+            
+            // Lógica de Crossfade Alternante
+            let capaEnCrecimiento = document.getElementById(`lsm-capa-${capaActiva === 1 ? 2 : 1}`);
+            let capaEnDesvanecimiento = document.getElementById(`lsm-capa-${capaActiva}`);
+
+            // Validar fuentes
+            let fuenteImagen = item.src;
+            if (item.tipo === 'espacio') fuenteImagen = 'img/espacio.png';
+            if (item.tipo === 'espacio_largo') fuenteImagen = 'img/espacio_largo.png';
+
+            // Preparamos la nueva imagen y ejecutamos el fundido
+            capaEnCrecimiento.src = fuenteImagen;
+            subtitulo.textContent = item.valor;
+            
+            capaEnCrecimiento.style.opacity = 1;
+            capaEnDesvanecimiento.style.opacity = 0;
+            
+            // Alternamos la capa activa para la siguiente iteración
+            capaActiva = capaActiva === 1 ? 2 : 1;
+
+            let tiempoEspera = velocidadBase;
+            if (item.tipo === 'palabra') tiempoEspera = velocidadBase * 2.5; 
+            else if (item.tipo === 'letra') tiempoEspera = velocidadBase * 1.2; 
+            else if (item.tipo === 'espacio') tiempoEspera = velocidadBase * 0.8; 
+            else if (item.tipo === 'espacio_largo') tiempoEspera = velocidadBase * 4.0; 
+
+            indexActual++;
+            intervalo = setTimeout(reproducirSiguiente, tiempoEspera);
+        }
+
+        function estadoDeReposo() {
+            let capa1 = document.getElementById('lsm-capa-1');
+            let capa2 = document.getElementById('lsm-capa-2');
+            let subtitulo = document.getElementById('lsm-subtitulo');
+            
+            // Mandamos a reposo la capa actual
+            let capaAct = capaActiva === 1 ? capa1 : capa2;
+            capaAct.src = 'img/reposo.png';
+            capaAct.style.opacity = 0.8;
+            
+            let capaOculta = capaActiva === 1 ? capa2 : capa1;
+            capaOculta.style.opacity = 0;
+
+            subtitulo.textContent = "Esperando...";
         }
 
         function estadoDeReposo() {
