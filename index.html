@@ -238,9 +238,23 @@ Escribe tu texto aquí..."></textarea>
             let item = secuenciaReproduccion[indexActual];
             let subtitulo = document.getElementById('lsm-subtitulo');
             
-            // Lógica de Capas
+            // 🧠 CÁLCULO INTELIGENTE DEL CROSSFADE
+            // El rango va de 2000 (0% velocidad) a 200 (100% velocidad)
+            let porcentajeVelocidad = (2000 - velocidadBase) / (2000 - 200);
+            
+            let transicionCss = "0.4s ease-in-out"; // Normal
+            if (porcentajeVelocidad > 0.85) {
+                transicionCss = "none"; // Nula: Modo relámpago
+            } else if (porcentajeVelocidad > 0.70) {
+                transicionCss = "0.1s ease-in-out"; // Súper veloz
+            }
+
             let capaEnCrecimiento = document.getElementById(`lsm-capa-${capaActiva === 1 ? 2 : 1}`);
             let capaEnDesvanecimiento = document.getElementById(`lsm-capa-${capaActiva}`);
+
+            // Aplicamos la transición dinámica a ambas capas
+            capaEnCrecimiento.style.transition = `opacity ${transicionCss}`;
+            capaEnDesvanecimiento.style.transition = `opacity ${transicionCss}`;
 
             let fuenteImagen = item.src;
             if (item.tipo === 'espacio') fuenteImagen = 'img/espacio.png';
@@ -254,7 +268,6 @@ Escribe tu texto aquí..."></textarea>
             
             capaActiva = capaActiva === 1 ? 2 : 1;
 
-            // Cadencia Orgánica
             let tiempoEspera = velocidadBase;
             if (item.tipo === 'palabra') tiempoEspera = velocidadBase * 2.5; 
             else if (item.tipo === 'letra') tiempoEspera = velocidadBase * 1.2; 
