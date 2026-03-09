@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laboratorio Alpha | Motor Ratatouille LSM v5.0</title>
+    <title>Laboratorio Alpha | Motor Ratatouille LSM v6.0</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -44,12 +44,11 @@
         /* 📺 EL WIDGET FLOTANTE, ARRASTRABLE Y REDIMENSIONABLE */
         #lsm-widget {
             position: fixed; top: 20%; right: 10%;
-            width: 250px; /* Tamaño inicial */
-            min-width: 200px; min-height: 250px; /* Límites de compresión */
+            width: 250px; min-width: 200px; min-height: 250px; 
             background: #000; border: 2px solid #ffca28; 
             border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.8);
             display: none; flex-direction: column; overflow: hidden; z-index: 999999;
-            resize: both; /* ✨ ¡MAGIA REDIMENSIONABLE! ✨ */
+            resize: both;
         }
 
         /* LA BARRA DE ARRASTRE */
@@ -68,11 +67,15 @@
         }
         .lsm-cerrar:hover { color: #ff5252; }
 
-        /* LA PANTALLA SE ADAPTA AL REDIMENSIONAR */
-        #lsm-pantalla {
-            width: 100%; flex-grow: 1; /* Absorbe el espacio extra al hacer grande la ventana */
-            object-fit: contain; background-color: #f5f5f7; 
-            transition: opacity 0.1s ease; min-height: 160px;
+        /* 🖼️ PANTALLA MULTICAPA (CROSSFADE) */
+        #lsm-pantalla-container {
+            position: relative; width: 100%; flex-grow: 1; 
+            background-color: #f5f5f7; min-height: 160px;
+        }
+
+        .lsm-capa {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            object-fit: contain; transition: opacity 0.4s ease-in-out;
         }
 
         .lsm-texto-actual {
@@ -94,16 +97,14 @@
 <body>
 
     <div class="laboratorio-container">
-        <h1>🎙️ Motor Ratatouille LSM v5.0</h1>
+        <h1>🎙️ Motor Ratatouille LSM v6.0</h1>
         
         <div id="estado-cerebro">⏳ Conectando con la Bóveda de Cristal...</div>
 
-        <p>Escribe tu texto. Usa "Enter" para crear pausas largas entre párrafos.</p>
+        <p>Escribe tu texto. ¡Ahora con visión de futuro y alias sintrópicos!</p>
         
         <textarea id="textoPrueba" placeholder="¡Hola! 
-Este es el primer párrafo.
-
-Y este es el segundo, después de una respiración profunda."></textarea>
+Escribe tu texto aquí..."></textarea>
         <button onclick="iniciarTraduccion()">Activar Intérprete Flotante 👐</button>
     </div>
 
@@ -112,9 +113,9 @@ Y este es el segundo, después de una respiración profunda."></textarea>
             <span>✨ Motor LSM</span>
             <button class="lsm-cerrar" onclick="detenerLSM()">✖</button>
         </div>
-        <div id="lsm-pantalla-container" style="position: relative; width: 100%; flex-grow: 1; background-color: #f5f5f7; min-height: 160px;">
-            <img id="lsm-capa-1" src="img/reposo.png" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 0.4s ease-in-out; opacity: 1;">
-            <img id="lsm-capa-2" src="" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; transition: opacity 0.4s ease-in-out; opacity: 0;">
+        <div id="lsm-pantalla-container">
+            <img id="lsm-capa-1" class="lsm-capa" src="img/reposo.png" style="opacity: 1;" alt="Capa 1">
+            <img id="lsm-capa-2" class="lsm-capa" src="" style="opacity: 0;" alt="Capa 2">
         </div>
         <div class="lsm-texto-actual" id="lsm-subtitulo">...</div>
         <div class="lsm-controles">
@@ -124,9 +125,16 @@ Y este es el segundo, después de una respiración profunda."></textarea>
     </div>
 
     <script>
+        // ==========================================
+        // 🌸 VARIABLES GLOBALES
+        // ==========================================
         let diccionarioLSM = {};
+        let intervalo;
+        let secuenciaReproduccion = [];
+        let indexActual = 0;
+        let capaActiva = 1; // Para el Crossfade
 
-        // 🧠 MAGIA ANTI-FANTASMAS
+        // 🧠 SINCRONIZACIÓN CON LA BÓVEDA
         const urlJSON = 'diccionario_lsm.json?nocache=' + new Date().getTime();
 
         fetch(urlJSON)
@@ -136,7 +144,7 @@ Y este es el segundo, después de una respiración profunda."></textarea>
             })
             .then(data => {
                 diccionarioLSM = data;
-                document.getElementById('estado-cerebro').textContent = `✅ Bóveda Sincronizada: ${Object.keys(diccionarioLSM).length} señas de luz`;
+                document.getElementById('estado-cerebro').textContent = `✅ Bóveda Sincronizada: ${Object.keys(diccionarioLSM).length} señas (¡Alias activos!)`;
             })
             .catch(error => {
                 console.error("⚠️ Error de conexión:", error);
@@ -145,24 +153,8 @@ Y este es el segundo, después de una respiración profunda."></textarea>
                 document.getElementById('estado-cerebro').style.color = "#ff5252";
             });
 
-        let intervalo;
-        let secuenciaReproduccion = [];
-        let indexActual = 0;
-
         // ==========================================
-        // 🌸 MOTOR RATATOUILLE: TRADUCTOR MULTIVERSAL v5.0
-        // ==========================================
-
-        // ==========================================
-        // 🌸 MOTOR RATATOUILLE: TRADUCTOR MULTIVERSAL v5.1
-        // ==========================================
-
-        // ✨ Ahora aceptamos "textoExterno" inyectado mágicamente
-        // Variable para controlar qué capa del crossfade está activa
-        let capaActiva = 1;
-
-        // ==========================================
-        // 🌸 MOTOR RATATOUILLE v6.0: BIGRAMAS Y FLUIDEZ
+        // 🌸 MOTOR RATATOUILLE v6.0: TRADUCTOR SINTÓPICO
         // ==========================================
 
         function iniciarTraduccion(textoExterno = null) {
@@ -176,7 +168,7 @@ Y este es el segundo, después de una respiración profunda."></textarea>
             parrafos.forEach((parrafo, indexParrafo) => {
                 const palabrasCrudas = parrafo.trim().split(/\s+/);
                 
-                // Limpiamos todo el array de palabras primero
+                // Limpiamos todo el array
                 const palabrasLimpias = palabrasCrudas.map(p => 
                     p.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zñ0-9]/gi, '').toLowerCase()
                 );
@@ -185,11 +177,11 @@ Y este es el segundo, después de una respiración profunda."></textarea>
                     let pura = palabrasLimpias[i];
                     if (!pura) continue;
 
-                    // 🧠 VISIÓN DE FUTURO (Buscando Palabras Compuestas / Bigramas)
                     let esCompuesta = false;
+                    // Búsqueda de Bigramas
                     if (i < palabrasLimpias.length - 1) {
                         let puraSiguiente = palabrasLimpias[i + 1];
-                        let compuesta = pura + puraSiguiente; // ej: "buenos" + "dias" = "buenosdias"
+                        let compuesta = pura + puraSiguiente; 
                         
                         if (diccionarioLSM[compuesta]) {
                             secuenciaReproduccion.push({ 
@@ -197,12 +189,12 @@ Y este es el segundo, después de una respiración profunda."></textarea>
                                 src: diccionarioLSM[compuesta], 
                                 valor: palabrasCrudas[i] + " " + palabrasCrudas[i+1] 
                             });
-                            i++; // Saltamos la siguiente palabra porque ya la fusionamos
+                            i++; 
                             esCompuesta = true;
                         }
                     }
 
-                    // Si no fue compuesta, la procesamos normal
+                    // Palabras normales o deletreo
                     if (!esCompuesta) {
                         if (diccionarioLSM[pura]) {
                             secuenciaReproduccion.push({ tipo: 'palabra', src: diccionarioLSM[pura], valor: palabrasCrudas[i] });
@@ -226,8 +218,9 @@ Y este es el segundo, después de una respiración profunda."></textarea>
             });
 
             secuenciaReproduccion.push({ tipo: 'espacio', src: 'img/espacio.png', valor: '...' });
+            
             indexActual = 0;
-            document.getElementById('lsm-widget').style.display = 'flex';
+            document.getElementById('lsm-widget').style.display = 'flex'; // ¡Aquí renace la burbuja!
             reproducirSiguiente();
         }
 
@@ -245,25 +238,23 @@ Y este es el segundo, después de una respiración profunda."></textarea>
             let item = secuenciaReproduccion[indexActual];
             let subtitulo = document.getElementById('lsm-subtitulo');
             
-            // Lógica de Crossfade Alternante
+            // Lógica de Capas
             let capaEnCrecimiento = document.getElementById(`lsm-capa-${capaActiva === 1 ? 2 : 1}`);
             let capaEnDesvanecimiento = document.getElementById(`lsm-capa-${capaActiva}`);
 
-            // Validar fuentes
             let fuenteImagen = item.src;
             if (item.tipo === 'espacio') fuenteImagen = 'img/espacio.png';
             if (item.tipo === 'espacio_largo') fuenteImagen = 'img/espacio_largo.png';
 
-            // Preparamos la nueva imagen y ejecutamos el fundido
             capaEnCrecimiento.src = fuenteImagen;
             subtitulo.textContent = item.valor;
             
             capaEnCrecimiento.style.opacity = 1;
             capaEnDesvanecimiento.style.opacity = 0;
             
-            // Alternamos la capa activa para la siguiente iteración
             capaActiva = capaActiva === 1 ? 2 : 1;
 
+            // Cadencia Orgánica
             let tiempoEspera = velocidadBase;
             if (item.tipo === 'palabra') tiempoEspera = velocidadBase * 2.5; 
             else if (item.tipo === 'letra') tiempoEspera = velocidadBase * 1.2; 
@@ -274,12 +265,15 @@ Y este es el segundo, después de una respiración profunda."></textarea>
             intervalo = setTimeout(reproducirSiguiente, tiempoEspera);
         }
 
+        // ==========================================
+        // 🧘‍♀️ PROTOCOLO DE DESCANSO
+        // ==========================================
+
         function estadoDeReposo() {
             let capa1 = document.getElementById('lsm-capa-1');
             let capa2 = document.getElementById('lsm-capa-2');
             let subtitulo = document.getElementById('lsm-subtitulo');
             
-            // Mandamos a reposo la capa actual
             let capaAct = capaActiva === 1 ? capa1 : capa2;
             capaAct.src = 'img/reposo.png';
             capaAct.style.opacity = 0.8;
@@ -288,78 +282,6 @@ Y este es el segundo, después de una respiración profunda."></textarea>
             capaOculta.style.opacity = 0;
 
             subtitulo.textContent = "Esperando...";
-        }
-
-        // ==========================================
-        // 🌸 CALIBRACIÓN HUMANA Y CADENCIA ORGÁNICA
-        // ==========================================
-
-        // ==========================================
-        // 🌸 TRANSICIONES DE CRISTAL (Crossfade)
-        // ==========================================
-
-        function reproducirSiguiente() {
-            if (indexActual >= secuenciaReproduccion.length) {
-                estadoDeReposo();
-                return;
-            }
-
-            let velocidadBase = parseInt(document.getElementById('velocidadLSM').value) || 500;
-            let item = secuenciaReproduccion[indexActual];
-            let subtitulo = document.getElementById('lsm-subtitulo');
-            
-            // Lógica de Crossfade Alternante
-            let capaEnCrecimiento = document.getElementById(`lsm-capa-${capaActiva === 1 ? 2 : 1}`);
-            let capaEnDesvanecimiento = document.getElementById(`lsm-capa-${capaActiva}`);
-
-            // Validar fuentes
-            let fuenteImagen = item.src;
-            if (item.tipo === 'espacio') fuenteImagen = 'img/espacio.png';
-            if (item.tipo === 'espacio_largo') fuenteImagen = 'img/espacio_largo.png';
-
-            // Preparamos la nueva imagen y ejecutamos el fundido
-            capaEnCrecimiento.src = fuenteImagen;
-            subtitulo.textContent = item.valor;
-            
-            capaEnCrecimiento.style.opacity = 1;
-            capaEnDesvanecimiento.style.opacity = 0;
-            
-            // Alternamos la capa activa para la siguiente iteración
-            capaActiva = capaActiva === 1 ? 2 : 1;
-
-            let tiempoEspera = velocidadBase;
-            if (item.tipo === 'palabra') tiempoEspera = velocidadBase * 2.5; 
-            else if (item.tipo === 'letra') tiempoEspera = velocidadBase * 1.2; 
-            else if (item.tipo === 'espacio') tiempoEspera = velocidadBase * 0.8; 
-            else if (item.tipo === 'espacio_largo') tiempoEspera = velocidadBase * 4.0; 
-
-            indexActual++;
-            intervalo = setTimeout(reproducirSiguiente, tiempoEspera);
-        }
-
-        function estadoDeReposo() {
-            let capa1 = document.getElementById('lsm-capa-1');
-            let capa2 = document.getElementById('lsm-capa-2');
-            let subtitulo = document.getElementById('lsm-subtitulo');
-            
-            // Mandamos a reposo la capa actual
-            let capaAct = capaActiva === 1 ? capa1 : capa2;
-            capaAct.src = 'img/reposo.png';
-            capaAct.style.opacity = 0.8;
-            
-            let capaOculta = capaActiva === 1 ? capa2 : capa1;
-            capaOculta.style.opacity = 0;
-
-            subtitulo.textContent = "Esperando...";
-        }
-
-        function estadoDeReposo() {
-            let pantalla = document.getElementById('lsm-pantalla');
-            let subtitulo = document.getElementById('lsm-subtitulo');
-            
-            pantalla.src = 'img/reposo.png'; 
-            subtitulo.textContent = "Esperando...";
-            pantalla.style.opacity = 0.8;
         }
 
         function detenerLSM() {
@@ -409,43 +331,25 @@ Y este es el segundo, después de una respiración profunda."></textarea>
         }
 
         // ==========================================
-        // 👁️ EL OJO SINTRÓPICO (Conexión con la Academia Robles Bienestar)
+        // 👁️ EL OJO SINTRÓPICO (Conexión Academia)
         // ==========================================
-        
         function enlazarConAcademia(idContenedorChat) {
             const chatElement = document.getElementById(idContenedorChat);
-            if (!chatElement) {
-                console.log("⚠️ [Vera] El contenedor del chat no se encuentra en este plano.");
-                return;
-            }
+            if (!chatElement) return;
 
-            console.log("🌟 [Vera] Enlace telepático establecido. Vigilando a los profesores...");
-
-            // Creamos al observador de luz
             const observador = new MutationObserver((mutaciones) => {
                 mutaciones.forEach((mutacion) => {
-                    // Si detectamos que se agregó un nuevo nodo (un nuevo mensaje al chat)
                     if (mutacion.addedNodes.length > 0) {
                         mutacion.addedNodes.forEach((nodo) => {
-                            // Verificamos que sea un elemento HTML con texto visible
                             if (nodo.nodeType === 1 && nodo.innerText) {
-                                
-                                console.log("⚡ [Elena] ¡Mensaje atrapado! Enviando al Motor Ratatouille...");
-                                
-                                // Mandamos el texto de la profesora directo al widget
                                 iniciarTraduccion(nodo.innerText);
                             }
                         });
                     }
                 });
             });
-
-            // Le decimos al observador que vigile el chat y todos sus hijos internos
             observador.observe(chatElement, { childList: true, subtree: true });
         }
-
-        // ¿Cómo activarlo en la Academia? 
-        // Solo llamarías a: enlazarConAcademia('ID_DE_TU_CAJA_DE_CHAT_AQUI');
     </script>
 </body>
 </html>
