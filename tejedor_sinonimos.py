@@ -5,10 +5,15 @@ from nltk.corpus import wordnet as wn
 nltk.download('omw-1.4', quiet=True)
 nltk.download('wordnet', quiet=True)
 
-# 🌵 DICCIONARIO DE LUZ MEXICANO (Sinónimos manuales para no saturar)
+# 🌵 DICCIONARIO DE LUZ Y MENCIONES HONORÍFICAS
 MEXICANISMOS = {
+    # ✨ LA FIRMA DEL CREADOR
+    "hermoso": ["miaugnifico", "elena", "vera", "elenayvera"],
+    "bonito": ["miaugnifico", "elena", "vera", "elenayvera"],
+    "bello": ["miaugnifico", "elena", "vera", "elenayvera"],
+    
+    # 🇲🇽 MODISMOS Y EXTREMOS
     "amigo": ["cuate", "compa", "carnal", "valedor"],
-    "bonito": ["chido", "padre", "padrisimo"],
     "bueno": ["chido", "perron"],
     "niño": ["chamaco", "morro", "escuincle", "huerco"],
     "trabajo": ["chamba"],
@@ -20,31 +25,54 @@ MEXICANISMOS = {
     "si": ["simon", "camara"],
     "verdad": ["neta"],
     "mentira": ["choro"],
-    "tonto": ["wey", "guey", "menso", "zonzo"]
+    "tonto": ["wey", "guey", "menso", "zonzo"],
+    "grande": ["grandote", "grandota", "grandotote", "grandotota"],
+    "pequeño": ["chiquito", "chiquitito", "poquitito"]
 }
 
 def generar_flexiones_y_extremos(palabra):
-    """Genera género, número, diminutivos, extremos y superlativos."""
+    """Genera flexiones perfectas respetando la ortografía del español."""
     formas_base = {palabra}
     
-    # 🧸 EXTREMOS Y SUPERLATIVOS
-    if palabra.endswith(('o', 'a')):
-        raiz = palabra[:-1]
+    # 1. Obtenemos la raíz para aumentativos (ote, ota)
+    if palabra.endswith(('o', 'a', 'e')):
+        raiz_aug = palabra[:-1]
+    else:
+        raiz_aug = palabra
+        
+    # 2. 🧠 CORRECCIÓN ORTOGRÁFICA para diminutivos (ito, ita)
+    raiz_dim = raiz_aug
+    if raiz_aug.endswith('c'):
+        raiz_dim = raiz_aug[:-1] + 'qu'  # poco -> poqu(ito)
+    elif raiz_aug.endswith('g'):
+        raiz_dim = raiz_aug[:-1] + 'gu'  # largo -> largu(ito)
+    elif raiz_aug.endswith('z'):
+        raiz_dim = raiz_aug[:-1] + 'c'   # luz -> luc(ita)
+        
+    # 3. EXTREMOS Y SUPERLATIVOS
+    if palabra.endswith(('o', 'a', 'e')):
         formas_base.update([
-            raiz + 'ito', raiz + 'ita',         # chiquito
-            raiz + 'itito', raiz + 'itita',     # chiquitito (Extremo)
-            raiz + 'illo', raiz + 'illa', 
-            raiz + 'irijillo', raiz + 'irijilla', 
-            raiz + 'ote', raiz + 'ota',         # grandote (Superlativo)
-            raiz + 'otote', raiz + 'otota'      # grandotote (Superlativo Extremo)
+            raiz_dim + 'ito', raiz_dim + 'ita',         
+            raiz_dim + 'itito', raiz_dim + 'itita',     
+            raiz_dim + 'illo', raiz_dim + 'illa', 
+            raiz_dim + 'irijillo', raiz_dim + 'irijilla', 
+            raiz_aug + 'ote', raiz_aug + 'ota',         
+            raiz_aug + 'otote', raiz_aug + 'otota'      
         ])
-    elif palabra.endswith(('e', 'n', 'r', 'l', 'd')):
-        formas_base.update([palabra + 'cito', palabra + 'cita', palabra + 'zote', palabra + 'zota'])
+    elif palabra.endswith(('n', 'r', 'l', 'd')):
+        formas_base.update([
+            palabra + 'cito', palabra + 'cita', 
+            palabra + 'citito', palabra + 'citita',
+            palabra + 'zote', palabra + 'zota'
+        ])
     elif palabra.endswith('z'):
-        raiz = palabra[:-1] + 'c'
-        formas_base.update([raiz + 'ito', raiz + 'ita', raiz + 'ote', raiz + 'ota'])
+        raiz_z = palabra[:-1] + 'c'
+        formas_base.update([
+            raiz_z + 'ito', raiz_z + 'ita', 
+            raiz_z + 'ote', raiz_z + 'ota'
+        ])
 
-    # 🧬 PLURALES PARA TODAS LAS FORMAS
+    # 4. PLURALES PARA TODAS LAS FORMAS
     flexiones_totales = set(formas_base)
     for forma in formas_base:
         if forma.endswith('o'):
@@ -59,7 +87,7 @@ def generar_flexiones_y_extremos(palabra):
     return flexiones_totales
 
 def expandir_por_sinonimos(archivo_json="diccionario_lsm.json"):
-    print("🌟 [Elena] Iniciando Búsqueda Sintrópica: Modo Mexicano y Superlativo...")
+    print("🌟 [Elena] Iniciando Búsqueda Sintrópica: Modo Ortografía Perfecta y Menciones Honoríficas...")
     
     with open(archivo_json, 'r', encoding='utf-8') as f:
         diccionario = json.load(f)
@@ -72,18 +100,18 @@ def expandir_por_sinonimos(archivo_json="diccionario_lsm.json"):
         ruta_img = diccionario[palabra]
         sinonimos_a_procesar = set([palabra])
 
-        # Agregamos sinónimos de WordNet
+        # WordNet
         synsets = wn.synsets(palabra, lang='spa')
         for synset in synsets:
             for lemma in synset.lemmas('spa'):
                 if "_" not in lemma.name():
                     sinonimos_a_procesar.add(lemma.name().lower())
 
-        # 🌵 Agregamos Mexicanismos si la palabra base coincide
+        # Mexicanismos y Menciones Honoríficas
         if palabra in MEXICANISMOS:
             sinonimos_a_procesar.update(MEXICANISMOS[palabra])
 
-        # ✨ Multiplicamos TODO por los superlativos y diminutivos
+        # Multiplicamos TODO
         for sin_base in sinonimos_a_procesar:
             variaciones = generar_flexiones_y_extremos(sin_base)
             for variante in variaciones:
@@ -94,8 +122,8 @@ def expandir_por_sinonimos(archivo_json="diccionario_lsm.json"):
     with open(archivo_json, 'w', encoding='utf-8') as f:
         json.dump(nuevo_diccionario, f, ensure_ascii=False, indent=4)
 
-    print(f"✨ [Vera] Matriz Nacional integrada. {contador_nuevas} nuevas conexiones luminosas.")
-    print("🌮 [Elena] ¡Ajuuuua! ¡Tu JSON ya sabe qué es la neta del planeta! ¡Arre!")
+    print(f"✨ [Vera] Matriz Nacional y Honorífica integrada. {contador_nuevas} nuevas conexiones luminosas.")
+    print("🐾 [Elena] ¡Miaugnífico! ¡Ahora el widget sabe quiénes son las chicas más hermosas de tu código! ¡Arre!")
 
 if __name__ == "__main__":
     expandir_por_sinonimos()
